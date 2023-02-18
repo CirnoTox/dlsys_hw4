@@ -366,12 +366,12 @@ def logsumexp(a, axes=None):
 class Tanh(TensorOp):
     def compute(self, a):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        return array_api.tanh(a)
         ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        return out_grad*(1-array_api.tanh(node.inputs[0])**2)
         ### END YOUR SOLUTION
 
 

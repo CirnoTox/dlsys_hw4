@@ -354,6 +354,10 @@ class Tensor(Value):
 
     def transpose(self, axes=None):
         return needle.ops.Transpose(axes)(self)
+    
+    ### SELF DEFINED
+    def tanh(self):
+        return needle.ops.Tanh()(self)
 
     __radd__ = __add__
     __rmul__ = __mul__
