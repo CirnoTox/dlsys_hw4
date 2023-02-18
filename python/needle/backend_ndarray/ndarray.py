@@ -246,7 +246,10 @@ class NDArray:
         """
 
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        if prod(new_shape) != self.size:
+            raise ValueError()
+
+        return self.as_strided(new_shape, self.compact_strides(new_shape))
         ### END YOUR SOLUTION
 
     def permute(self, new_axes):
@@ -271,7 +274,9 @@ class NDArray:
         """
 
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        newStrides = tuple([self._strides[axis] for axis in new_axes])
+        newShape = tuple([self._shape[axis] for axis in new_axes])
+        return self.as_strided(newShape, newStrides)
         ### END YOUR SOLUTION
 
     def broadcast_to(self, new_shape):
@@ -294,7 +299,20 @@ class NDArray:
             point to the same memory as the original array.
         """
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        if not all([
+            self.shape[i] == 1
+            or
+            new_shape[i] == self.shape[i]
+            for i in range(len(new_shape))
+        ]):
+            raise ValueError
+
+        newStrides = tuple([
+            0 if self.shape[i] == 1 else self._strides[i]
+            for i in range(len(new_shape))
+        ])
+        
+        return self.as_strided(new_shape, newStrides)
         ### END YOUR SOLUTION
 
     ### Get and set elements
@@ -361,7 +379,25 @@ class NDArray:
         assert len(idxs) == self.ndim, "Need indexes equal to number of dimensions"
 
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        newShape = []
+        newStrides=[]
+        offest = 0
+        itIndex=0
+        for s in idxs:
+            start = s.start
+            stop = s.stop
+            step = s.step
+            newShape.append(math.ceil(math.floor(stop-start)/step))
+            newStrides.append(self.strides[itIndex]*step)
+            offest+=start*self.strides[itIndex]
+            itIndex+=1
+
+        arr=NDArray.make(newShape,
+                           strides=tuple(newStrides),
+                           device=self.device,
+                           handle=self._handle,
+                           offset=offest)
+        return arr
         ### END YOUR SOLUTION
 
     def __setitem__(self, idxs, other):
@@ -565,6 +601,9 @@ class NDArray:
         self.device.reduce_max(view.compact()._handle, out._handle, view.shape[-1])
         return out
 
+    # SELF DEFINED
+    def transpose(self,axes):
+        return self.permute(axes)
 
     def flip(self, axes):
         """
