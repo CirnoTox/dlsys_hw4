@@ -25,9 +25,9 @@ class RandomFlipHorizontal(Transform):
         Note: use the provided code to provide randomness, for easier testing
         """
         flip_img = np.random.rand() < self.p
-        ### BEGIN YOUR SOLUTION
+        # BEGIN YOUR SOLUTION
         raise NotImplementedError()
-        ### END YOUR SOLUTION
+        # END YOUR SOLUTION
 
 
 class RandomCrop(Transform):
@@ -45,9 +45,9 @@ class RandomCrop(Transform):
         shift_x, shift_y = np.random.randint(
             low=-self.padding, high=self.padding + 1, size=2
         )
-        ### BEGIN YOUR SOLUTION
+        # BEGIN YOUR SOLUTION
         raise NotImplementedError()
-        ### END YOUR SOLUTION
+        # END YOUR SOLUTION
 
 
 class Dataset:
@@ -101,19 +101,54 @@ class DataLoader:
         self.batch_size = batch_size
         if not self.shuffle:
             self.ordering = np.array_split(
-                np.arange(len(dataset)), range(batch_size, len(dataset), batch_size)
+                np.arange(len(dataset)), range(
+                    batch_size, len(dataset), batch_size)
             )
 
     def __iter__(self):
-        ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
-        ### END YOUR SOLUTION
+        # BEGIN YOUR SOLUTION
+        self.ordering_it = 0
+        if self.shuffle:
+            shuffle_range = np.arange(len(self.dataset))
+            np.random.shuffle(shuffle_range)
+            self.ordering = np.array_split(shuffle_range, range(
+                self.batch_size, len(self.dataset), self.batch_size))
+
+        # END YOUR SOLUTION
         return self
 
     def __next__(self):
-        ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
-        ### END YOUR SOLUTION
+        # BEGIN YOUR SOLUTION
+        if self.ordering_it == len(self.ordering):
+            raise StopIteration
+
+        if type(self.dataset) is NDArrayDataset:
+            if self.batch_size == 1:
+                index = self.ordering[self.ordering_it][0]
+                result = Tensor(self.dataset[index])
+                self.ordering_it = self.ordering_it+1
+                return (result,)
+            else:
+                result = []
+                for index in self.ordering[self.ordering_it]:
+                    result.append(self.dataset[index][0])
+                self.ordering_it = self.ordering_it+1
+                return (Tensor(np.array(result)),)
+
+        if type(self.dataset) is (MNISTDataset or CIFAR10Dataset):
+            result = []
+            for i in range(2):
+                field_result = []
+                for index in self.ordering[self.ordering_it]:
+                    field_result.append(self.dataset[index][i])
+                result.append(Tensor(field_result))
+
+            self.ordering_it = self.ordering_it+1
+            return (result[0], result[1])
+
+        else:
+            raise NotImplementedError()
+        # END YOUR SOLUTION
 
 
 class MNISTDataset(Dataset):
@@ -123,19 +158,19 @@ class MNISTDataset(Dataset):
         label_filename: str,
         transforms: Optional[List] = None,
     ):
-        ### BEGIN YOUR SOLUTION
+        # BEGIN YOUR SOLUTION
         raise NotImplementedError()
-        ### END YOUR SOLUTION
+        # END YOUR SOLUTION
 
     def __getitem__(self, index) -> object:
-        ### BEGIN YOUR SOLUTION
+        # BEGIN YOUR SOLUTION
         raise NotImplementedError()
-        ### END YOUR SOLUTION
+        # END YOUR SOLUTION
 
     def __len__(self) -> int:
-        ### BEGIN YOUR SOLUTION
+        # BEGIN YOUR SOLUTION
         raise NotImplementedError()
-        ### END YOUR SOLUTION
+        # END YOUR SOLUTION
 
 
 class CIFAR10Dataset(Dataset):
@@ -155,26 +190,57 @@ class CIFAR10Dataset(Dataset):
         X - numpy array of images
         y - numpy array of labels
         """
-        ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
-        ### END YOUR SOLUTION
+        # BEGIN YOUR SOLUTION
+        def unpickle(file):
+            with open(file, 'rb') as fo:
+                dict = pickle.load(fo, encoding='bytes')
+            print(type(dict))
+            return dict
+        self.base_folder = base_folder
+        self.p = p
+        self.transforms = transforms
+        self.X = []
+        self.y = []
+        if train:
+            for i in range(1, 6):
+                dictData = unpickle(base_folder+"/data_batch_"+str(i))
+                for j in range(len(dictData[b"filenames"])):
+                    self.X.append(
+                        np.resize(np.frombuffer(
+                            dictData[b"filenames"][j], dtype=np.uint8), (3, 32, 32))/255
+                    )
+                    self.y.append(dictData[b"labels"][j])
+        else:
+            dictData = unpickle(base_folder+"/test_batch")
+            for j in range(len(dictData[b"filenames"])):
+                self.X.append(
+                    np.resize(np.frombuffer(
+                        dictData[b"filenames"][j], dtype=np.uint8), (3, 32, 32))/255
+                )
+                self.y.append(dictData[b"labels"][j])
+        self.X = np.array(self.X)
+        self.y = np.array(self.y)
+
+        # END YOUR SOLUTION
+
+    # SELF DEFINED
 
     def __getitem__(self, index) -> object:
         """
         Returns the image, label at given index
         Image should be of shape (3, 32, 32)
         """
-        ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
-        ### END YOUR SOLUTION
+        # BEGIN YOUR SOLUTION
+        return self.X[index], self.y[index]
+        # END YOUR SOLUTION
 
     def __len__(self) -> int:
         """
         Returns the total number of examples in the dataset
         """
-        ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
-        ### END YOUR SOLUTION
+        # BEGIN YOUR SOLUTION
+        return len(self.y)
+        # END YOUR SOLUTION
 
 
 class NDArrayDataset(Dataset):
@@ -188,10 +254,6 @@ class NDArrayDataset(Dataset):
         return tuple([a[i] for a in self.arrays])
 
 
-
-
-
-
 class Dictionary(object):
     """
     Creates a dictionary from a list of words, mapping each word to a
@@ -201,6 +263,7 @@ class Dictionary(object):
     idx2word: list of words in the dictionary, in the order they were added
         to the dictionary (i.e. each word only appears once in this list)
     """
+
     def __init__(self):
         self.word2idx = {}
         self.idx2word = []
@@ -212,28 +275,30 @@ class Dictionary(object):
         and appends to the list of words.
         Returns the word's unique ID.
         """
-        ### BEGIN YOUR SOLUTION
+        # BEGIN YOUR SOLUTION
         raise NotImplementedError()
-        ### END YOUR SOLUTION
+        # END YOUR SOLUTION
 
     def __len__(self):
         """
         Returns the number of unique words in the dictionary.
         """
-        ### BEGIN YOUR SOLUTION
+        # BEGIN YOUR SOLUTION
         raise NotImplementedError()
-        ### END YOUR SOLUTION
-
+        # END YOUR SOLUTION
 
 
 class Corpus(object):
     """
     Creates corpus from train, and test txt files.
     """
+
     def __init__(self, base_dir, max_lines=None):
         self.dictionary = Dictionary()
-        self.train = self.tokenize(os.path.join(base_dir, 'train.txt'), max_lines)
-        self.test = self.tokenize(os.path.join(base_dir, 'test.txt'), max_lines)
+        self.train = self.tokenize(os.path.join(
+            base_dir, 'train.txt'), max_lines)
+        self.test = self.tokenize(os.path.join(
+            base_dir, 'test.txt'), max_lines)
 
     def tokenize(self, path, max_lines=None):
         """
@@ -247,9 +312,9 @@ class Corpus(object):
         Output:
         ids: List of ids
         """
-        ### BEGIN YOUR SOLUTION
+        # BEGIN YOUR SOLUTION
         raise NotImplementedError()
-        ### END YOUR SOLUTION
+        # END YOUR SOLUTION
 
 
 def batchify(data, batch_size, device, dtype):
@@ -268,9 +333,9 @@ def batchify(data, batch_size, device, dtype):
     If the data cannot be evenly divided by the batch size, trim off the remainder.
     Returns the data as a numpy array of shape (nbatch, batch_size).
     """
-    ### BEGIN YOUR SOLUTION
+    # BEGIN YOUR SOLUTION
     raise NotImplementedError()
-    ### END YOUR SOLUTION
+    # END YOUR SOLUTION
 
 
 def get_batch(batches, i, bptt, device=None, dtype=None):
@@ -292,6 +357,6 @@ def get_batch(batches, i, bptt, device=None, dtype=None):
     data - Tensor of shape (bptt, bs) with cached data as NDArray
     target - Tensor of shape (bptt*bs,) with cached data as NDArray
     """
-    ### BEGIN YOUR SOLUTION
+    # BEGIN YOUR SOLUTION
     raise NotImplementedError()
-    ### END YOUR SOLUTION
+    # END YOUR SOLUTION

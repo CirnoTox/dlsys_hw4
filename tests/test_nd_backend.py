@@ -164,10 +164,18 @@ def test_stack_backward(shape, axis, l, device):
     A_t = [torch.Tensor(_A[i]) for i in range(l)]
     for i in range(l):
         A_t[i].requires_grad = True
+    ###
+    t=ndl.stack(A, axis=axis).sum()
+    t.backward()
+    print(A[0].grad)
+
+    ###
+
     ndl.stack(A, axis=axis).sum().backward()
     torch.stack(A_t, dim=axis).sum().backward()
     for i in range(l):
-        np.testing.assert_allclose(A_t[i].grad.numpy(), A[i].grad.numpy(), atol=1e-5, rtol=1e-5)
+        np.testing.assert_allclose(A_t[i].grad.numpy(), 
+                                   A[i].grad.numpy(), atol=1e-5, rtol=1e-5)
 
 
 SUMMATION_PARAMETERS = [((1, 1, 1), None),

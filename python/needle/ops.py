@@ -391,13 +391,15 @@ class Stack(TensorOp):
 
     def compute(self, args):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        newArgs=[args[i].numpy() for i in range(len(args))]
+        res=numpy.stack(newArgs,axis=self.axis)
+        print("stack",res.shape)
+        return NDArray(res)
         ### END YOUR SOLUTION
-
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        return split(out_grad,self.axis)
         ### END YOUR SOLUTION
 
 
@@ -417,12 +419,23 @@ class Split(TensorTupleOp):
 
     def compute(self, A):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        npTensor=A.numpy()
+        getSplit=numpy.split(npTensor,A.shape[self.axis],axis=self.axis)
+        shape=list(A.shape)
+        shape=shape[0:self.axis]+shape[self.axis+1:]
+
+        res=[]
+        for i in range(A.shape[self.axis]):
+            t=Tensor(getSplit[i])
+            reT=reshape(t,shape)
+            res.append(reT)
+        print("split",len(res))
+        return res
         ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        return stack(out_grad,self.axis)
         ### END YOUR SOLUTION
 
 

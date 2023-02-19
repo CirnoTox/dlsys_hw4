@@ -392,7 +392,7 @@ class NDArray:
             offest+=start*self.strides[itIndex]
             itIndex+=1
 
-        arr=NDArray.make(newShape,
+        arr=self.make(newShape,
                            strides=tuple(newStrides),
                            device=self.device,
                            handle=self._handle,

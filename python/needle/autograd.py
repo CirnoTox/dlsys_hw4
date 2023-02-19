@@ -414,29 +414,25 @@ def find_topo_sort(node_list: List[Value]) -> List[Value]:
     visited=dict()
     resultSort=[]
     for node in node_list:
-        lSubSort=topo_sort_dfs(node,visited,False)
-        rSubSort=topo_sort_dfs(node,visited,True)
-        resultSort+=lSubSort+rSubSort
+        for i in range(len(node.inputs)):
+            resultSort+=topo_sort_dfs(node,visited,i)
         resultSort.append(node)
     return resultSort
 
-def topo_sort_dfs(node, visited, topo_order):
+def topo_sort_dfs(node, visited, index):
     """Post-order DFS"""
-    if len(node.inputs)<=topo_order:
-        return []
-    topoNode=node.inputs[topo_order];
+    topoNode=node.inputs[index];
     topoNodeId=id(topoNode)
     ###print(topoNode)
     if visited.get(topoNodeId):
         return []
     resultSort=[]
     # visit left and right
-    lSubSort=topo_sort_dfs(topoNode,visited,False)
-    rSubSort=topo_sort_dfs(topoNode,visited,True)
-    # post-order result
-    resultSort+=lSubSort+rSubSort
-    visited[topoNodeId]=True
+    for i in range(len(topoNode.inputs)):
+        resultSort+=topo_sort_dfs(topoNode,visited,i)
     resultSort.append(topoNode)
+    # post-order result
+    visited[topoNodeId]=True
     return resultSort
 
 
